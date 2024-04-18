@@ -75,7 +75,7 @@ class FrameProcessor:
             img = self.get_frame()
             cv2.imshow(title, img)
 
-            if cv2.waitKey(25) & 0xFF == ord("q"):
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()
                 break
         
