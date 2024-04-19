@@ -3,6 +3,7 @@ import cv2
 import pygetwindow as gw
 import mss
 import time
+from EnvironmentHelper import is_dead
 
 class FrameProcessor:
     """A class designed to grab screenshots of a desired window, process those screenshots, and 
@@ -74,9 +75,24 @@ class FrameProcessor:
         while iterations > 0:
             img = self.get_frame()
             cv2.imshow(title, img)
-
+            iterations -= 1
+            
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()
                 break
+            
+    def update_terminal_image(self, dead_name="dead", goal_name="goal", path=".venv\\images\\",
+                              set_goal=False):
+        img = self.get_frame()
+        name = path + dead_name
+        if set_goal:
+            name = path + goal_name
+            
+        np.save(name, img)
+    
+    def save_sct(self, sct_name, path=".venv\\images\\"):
+        img = self.get_frame()
+        name = path + sct_name
         
-    ...
+        np.save(name, img)
+        
