@@ -10,7 +10,7 @@ class FrameProcessor:
     perform desired actions with them.
     """
     
-    def __init__(self, win_title,top_offset=0,left_offset=0,width_offset=0,
+    def __init__(self, win_title, top_offset=0, left_offset=0, width_offset=0,
                  height_offset=0):
         """Initializes a FrameProcessor object designed to grab screenshots of a 
         specific window and perform certain actions with it.
@@ -28,6 +28,9 @@ class FrameProcessor:
         self.mon = {"top": self.g_window.top + top_offset, "left": self.g_window.left + left_offset, 
                     "width": self.win_width - width_offset, "height": self.win_height - height_offset}
         self.sct = mss.mss()
+        
+    def get_frame_shape(self):
+        return (self.mon.get("width"), self.mon.get("height"))
         
     
     def get_frame(self):
@@ -71,16 +74,21 @@ class FrameProcessor:
         iterations = duration
         if not by_frames:
             iterations = duration * self.calculate_fps()
-        
+        img = self.get_frame()
+        dead = 0
         while iterations > 0:
-            img = self.get_frame()
-            cv2.imshow(title, img)
+            new_img = self.get_frame()
+            cv2.imshow(title, new_img)
             iterations -= 1
-            
+            if is_dead(img, new_img):
+                dead += 1
+                print("Death: ", dead)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()
                 break
-            
+            img = new_img
+    
+    # Probably not needed anymore
     def update_terminal_image(self, dead_name="dead", goal_name="goal", path=".venv\\images\\",
                               set_goal=False):
         img = self.get_frame()
