@@ -104,4 +104,7 @@ class NEATController:
         with open(path, "rb") as f:
             self.winner = pickle.load(f)
             f.close()
-
+    
+    def load_checkpoint(self, path):
+        """Restores population from a file"""
+        self.pop = neat.Checkpointer.restore_checkpoint(path)
