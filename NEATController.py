@@ -57,7 +57,7 @@ class NEATController:
         self.keyboard.press(Key.space)
         
         self.keyboard.release(Key.space)
-        time.sleep(0.5)
+        time.sleep(0.2)
         progress = 0.0
         img = self.frame_processor.get_frame()
         dead = False
