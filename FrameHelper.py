@@ -68,7 +68,7 @@ class FrameProcessor:
         
         return img
     
-     def get_raw_frame(self, top_offset=0, left_offset=0, width_offset=0,
+    def get_raw_frame(self, top_offset=0, left_offset=0, width_offset=0,
                  height_offset=0):
         """Grabs an unprocessed screenshot of the selected window 
         and returns it as a NDArray of pixel values.

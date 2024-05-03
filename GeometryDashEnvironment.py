@@ -95,7 +95,7 @@ class GDashEnv(gym.Env):
         self.reward = 0
         return self.observation
         
-    def compute_reward(self, prev_obs, observation):
+    def compute_reward(self):
         """Computes the reward for the current step.
 
         Args:
@@ -107,7 +107,8 @@ class GDashEnv(gym.Env):
                 is terminated.
         """
         reward = self.reward
-        terminated = is_dead(prev_obs, observation, self.is_dead_threshold)
+        raw_img = self.frame_processor.get_raw_frame(35,180,330,100)
+        terminated = is_dead(raw_img, (11, 394))
         if terminated:
             reward += self.death_penalty
         else:
@@ -133,7 +134,7 @@ class GDashEnv(gym.Env):
         # Gets the next frame.
         self.observation = self.frame_processor.get_frame()
         # Computes new reward after the action is performed.
-        self.reward, terminated = self.compute_reward(observation,self.observation)
+        self.reward, terminated = self.compute_reward()
         return self.observation, self.reward, terminated
     
     def render(self):
