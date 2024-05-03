@@ -13,9 +13,13 @@ class GDashEnv(gym.Env):
     """A custom gymnasium environment designed for the game Geometry Dash. 
     Requires that Geometry Dash be running when being used.
     """
-    def __init__(self, top_offset=0, left_offset=0, width_offset=0,
-                 height_offset=0, survival_reward=1, death_penalty=-100, 
-                 is_dead_threshold=0.91):
+    JUMP = 1
+    IDLE = 0
+    
+    def __init__(self, top_offset=30, left_offset=10, width_offset=20,
+                 height_offset=40, survival_reward=1, death_penalty=-100, 
+                 is_dead_threshold=0.91, down_scaling=True, scale_width_factor=1,
+                 scale_height_factor=1, scale_width_offset=60, scale_height_offset=140):
         """Constructor for a GDashEnv object. Arguments determine the size of the screenshots
         of the game window and the reward values being used.
 
@@ -30,15 +34,27 @@ class GDashEnv(gym.Env):
                 of the game window. Defaults to 0.
             survival_reward (int, optional): The reward for surving one step. Defaults to 1.
                 death_penalty (int, optional): The penalty for dying. Defaults to -100.
-            is_dead_threshold (float): The threshold for is_dead() method used to determine
-                if the agent has died, a value between 0 and 1.0. Defaults to 0.91.
+            is_dead_threshold (float, optional): The threshold for is_dead() method used to 
+                determine if the agent has died, a value between 0 and 1.0. Defaults to 0.91.
+            down_scaling (bool, optional): Decides if downscaling is used when grabbing frames.
+                Defaults to True.
+            scale_width_factor (float, optional) The width scale factor for downscaling. 
+                Defaults to 1.
+            scale_height_factor (float, optional) The height scale factor for downscaling. 
+                Defaults to 1.
+            scale_width_offset (int, optional) The amount of pixels taken off the width in downscaling. 
+                Defaults to 60.
+            scale_height_offset (int, optional) The amount of pixels taken off the height in downscaling. 
+                Defaults to 100.
         """
         super().__init__()
         self.keyboard = Controller()
         self.g_window = gw.getWindowsWithTitle("Geometry Dash")[0]
         # FrameProcessor is used to get simplified screenshots of the game in real-time.
         self.frame_processor = FrameProcessor("Geometry Dash", top_offset, 
-                                              left_offset, width_offset, height_offset)
+                                              left_offset, width_offset, height_offset,
+                                              down_scaling, scale_width_factor,
+                                              scale_height_factor, scale_width_offset, scale_height_offset)
         self.win_width, self.win_height = self.frame_processor.get_frame_shape()
         # The observation space is the numpy array of pixel values from screenshots
         # of Geometry Dash. The shape is dimensions of the screenshots used.
@@ -46,7 +62,7 @@ class GDashEnv(gym.Env):
                                             shape=(self.win_height, self.win_width), 
                                             dtype=np.uint8)
         # The two actions are 0 - idle, and 1 - Jump
-        self.action_space = spaces.Discrete(2)
+        self.action_space = spaces.Discrete(4)
         # reset() method will initialize self.observation with a screenshot of the game.
         self.observation = np.empty([self.win_height, self.win_width],dtype=np.uint8)
         # self.reward keeps track of the current total of the current iteration.
@@ -67,6 +83,7 @@ class GDashEnv(gym.Env):
         Returns:
             Matlike: The current observation (current frame of the game).
         """
+        time.sleep(0.1)
         # Makes sure Geometry Dash window is in focus.
         self.g_window.activate()
         # Presses space to start or restart level.
@@ -109,6 +126,7 @@ class GDashEnv(gym.Env):
                 frame) post-action, the current total reward, and whether the game is 
                 terminated.
         """
+        
         observation = self._get_obs()
         if action == 1:     # Agent jumps.
             self.press_space()
@@ -133,5 +151,4 @@ class GDashEnv(gym.Env):
         """
         self.keyboard.press(Key.space)
         self.keyboard.release(Key.space)
-            
 

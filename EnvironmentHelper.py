@@ -1,4 +1,5 @@
 from skimage.metrics import structural_similarity
+import time
 
 def is_dead(prev_img, cur_img, threshold=0.91):
     """Compared a screenshot of the previous frame to the screenshot of the current
@@ -16,8 +17,28 @@ def is_dead(prev_img, cur_img, threshold=0.91):
     Returns:
         bool: True if the agent is dead, False otherwise.
     """
-    similarity = structural_similarity(prev_img,cur_img, win_size=3)
+    similarity = structural_similarity(prev_img,cur_img)
     if similarity < threshold:
+        print("is_dead similarity: ",similarity)
         return True
     else:
         return False
+    
+def get_environment_fps(game):
+    """Calculates the approximate fps of running the environment.
+
+    Args:
+        game (GDashEnv): An instance of a GDashEnv.
+
+    Returns:
+        int : The approximate frames per second.
+    """
+    game.reset()
+    fps = 0
+    initial_time = time.time()
+    while time.time() - initial_time < 10:
+        action = game.action_space.sample()
+        game.step(action)
+        fps += 1                         
+    return fps/10
+    

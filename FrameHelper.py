@@ -11,16 +11,24 @@ class FrameProcessor:
     """
     
     def __init__(self, win_title, top_offset=0, left_offset=0, width_offset=0,
-                 height_offset=0):
+                 height_offset=0, down_scaling=True, scale_width_factor=1,
+                 scale_height_factor=1, scale_width_offset=60, scale_height_offset=100):
         """Initializes a FrameProcessor object designed to grab screenshots of a 
         specific window and perform certain actions with it.
 
         Args:
-            win_title (str): the title of the target window.
-            top_offset (int, optional): offset for the top border of the screenshot. Defaults to 0.
-            left_offset (int, optional): offset for the left border of the screenshot. Defaults to 0.
-            width_offset (int, optional): offset for the width of the screenshot. Defaults to 0.
-            height_offset (int, optional): offset for the height of the screenshot. Defaults to 0.
+            win_title (str): The title of the target window.
+            top_offset (int, optional): Offset for the top border of the screenshot. Defaults to 0.
+            left_offset (int, optional): Offset for the left border of the screenshot. Defaults to 0.
+            width_offset (int, optional): Offset for the width of the screenshot. Defaults to 0.
+            height_offset (int, optional): Offset for the height of the screenshot. Defaults to 0.
+            down_scaling (bool, optional): Decides if frame is downscaled. Defaults to True.
+            scale_width_factor (float, optional): Sets the width factor for downscaling. Defaults to 1.
+            scale_height_factor (float, optional): Sets the height factor for downscaling. Defaults to 1.
+            scale_width_offset (int, optional) The amount of pixels taken off the width in downscaling. 
+                Defaults to 60.
+            scale_height_offset (int, optional) The amount of pixels taken off the height in downscaling. 
+                Defaults to 100.
         """
         self.win_title = win_title
         self.g_window = gw.getWindowsWithTitle(win_title)[0]
@@ -28,8 +36,16 @@ class FrameProcessor:
         self.mon = {"top": self.g_window.top + top_offset, "left": self.g_window.left + left_offset, 
                     "width": self.win_width - width_offset, "height": self.win_height - height_offset}
         self.sct = mss.mss()
+        self.down_scaling = down_scaling
+        self.scale_width_factor = scale_width_factor
+        self.scale_height_factor = scale_height_factor
+        self.scale_width_offset = scale_width_offset
+        self.scale_height_offset = scale_height_offset
         
     def get_frame_shape(self):
+        if self.down_scaling:
+            return (self.mon.get("width") - self.scale_width_offset, 
+                    self.mon.get("height") - self.scale_height_offset)
         return (self.mon.get("width"), self.mon.get("height"))
         
     
@@ -46,20 +62,13 @@ class FrameProcessor:
         # Reducing noise, trying to get only the important lines and shapes (cube, platform, obstacles)
         # Higher thresholds seems to reduce noise (unecessary lines and shapes)
         img = cv2.Canny(img, 300, 400)
+        if self.down_scaling:
+            img = cv2.resize(img,dsize=(self.get_frame_shape()[0],self.get_frame_shape()[1]), fx=self.scale_width_factor,
+                             fy=self.scale_height_factor, interpolation=cv2.INTER_AREA)
         
         return img
     
-    def get_raw_frame(self, top_offset=0, left_offset=0, width_offset=0,
-                 height_offset=0):
-        """Grabs an unprocessed screenshot of the selected window 
-        and returns it as a NDArray of pixel values.
-        Returns:
-            Matlike: NDArray containing the pixels of a screenshot
-        """
-        mon = {"top": self.g_window.top + top_offset, "left": self.g_window.left + left_offset, 
-                    "width": self.win_width - width_offset, "height": self.win_height - height_offset}
-        return np.asarray(self.sct.grab(mon))
-
+    
     def calculate_fps(self) -> int:
         """Calculates how many frames can be produced per second and returns it"""
         fps = 0
