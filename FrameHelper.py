@@ -68,6 +68,16 @@ class FrameProcessor:
         
         return img
     
+     def get_raw_frame(self, top_offset=0, left_offset=0, width_offset=0,
+                 height_offset=0):
+        """Grabs an unprocessed screenshot of the selected window 
+        and returns it as a NDArray of pixel values.
+        Returns:
+            Matlike: NDArray containing the pixels of a screenshot
+        """
+        mon = {"top": self.g_window.top + top_offset, "left": self.g_window.left + left_offset, 
+                    "width": self.win_width - width_offset, "height": self.win_height - height_offset}
+        return np.asarray(self.sct.grab(mon))
     
     def calculate_fps(self) -> int:
         """Calculates how many frames can be produced per second and returns it"""

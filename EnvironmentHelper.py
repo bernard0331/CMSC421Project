@@ -24,6 +24,18 @@ def is_dead(prev_img, cur_img, threshold=0.91):
     else:
         return False
     
+def getProgress(img, range_start, range_end, height):
+    samples = range(range_start, range_end)
+    height = height
+    green_count = 0
+
+    for x in samples:
+        pixel = img.pixel(x,height)
+        if(pixel[1] > 160 and pixel[0] < pixel[1] and pixel[2] < pixel[1]):
+            green_count += 1
+
+    return green_count/len(samples)
+    
 def get_environment_fps(game):
     """Calculates the approximate fps of running the environment.
 
