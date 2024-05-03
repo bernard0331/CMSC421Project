@@ -18,7 +18,7 @@ class GDashEnv(gym.Env):
     
     def __init__(self, top_offset=30, left_offset=10, width_offset=20,
                  height_offset=40, survival_reward=1, death_penalty=-100, 
-                 is_dead_threshold=0.91, down_scaling=True, scale_width_factor=1,
+                 is_dead_threshold=0.91, down_scaling=False, scale_width_factor=1,
                  scale_height_factor=1, scale_width_offset=60, scale_height_offset=140):
         """Constructor for a GDashEnv object. Arguments determine the size of the screenshots
         of the game window and the reward values being used.
@@ -37,7 +37,7 @@ class GDashEnv(gym.Env):
             is_dead_threshold (float, optional): The threshold for is_dead() method used to 
                 determine if the agent has died, a value between 0 and 1.0. Defaults to 0.91.
             down_scaling (bool, optional): Decides if downscaling is used when grabbing frames.
-                Defaults to True.
+                Defaults to False.
             scale_width_factor (float, optional) The width scale factor for downscaling. 
                 Defaults to 1.
             scale_height_factor (float, optional) The height scale factor for downscaling. 

@@ -11,7 +11,7 @@ class FrameProcessor:
     """
     
     def __init__(self, win_title, top_offset=0, left_offset=0, width_offset=0,
-                 height_offset=0, down_scaling=True, scale_width_factor=1,
+                 height_offset=0, down_scaling=False, scale_width_factor=1,
                  scale_height_factor=1, scale_width_offset=60, scale_height_offset=100):
         """Initializes a FrameProcessor object designed to grab screenshots of a 
         specific window and perform certain actions with it.
@@ -22,7 +22,7 @@ class FrameProcessor:
             left_offset (int, optional): Offset for the left border of the screenshot. Defaults to 0.
             width_offset (int, optional): Offset for the width of the screenshot. Defaults to 0.
             height_offset (int, optional): Offset for the height of the screenshot. Defaults to 0.
-            down_scaling (bool, optional): Decides if frame is downscaled. Defaults to True.
+            down_scaling (bool, optional): Decides if frame is downscaled. Defaults to False.
             scale_width_factor (float, optional): Sets the width factor for downscaling. Defaults to 1.
             scale_height_factor (float, optional): Sets the height factor for downscaling. Defaults to 1.
             scale_width_offset (int, optional) The amount of pixels taken off the width in downscaling. 
