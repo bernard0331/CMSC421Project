@@ -3,7 +3,7 @@ import cv2
 import pygetwindow as gw
 import mss
 import time
-from EnvironmentHelper import is_dead
+from EnvironmentHelper import is_dead_progress, getProgress
 
 class FrameProcessor:
     """A class designed to grab screenshots of a desired window, process those screenshots, and 
@@ -68,8 +68,8 @@ class FrameProcessor:
         
         return img
     
-    def get_raw_frame(self, top_offset=0, left_offset=0, width_offset=0,
-                 height_offset=0):
+    def get_raw_frame(self, top_offset=41, left_offset=191, width_offset=382,
+                 height_offset=518):
         """Grabs an unprocessed screenshot of the selected window 
         and returns it as a NDArray of pixel values.
         Returns:
@@ -103,19 +103,21 @@ class FrameProcessor:
         iterations = duration
         if not by_frames:
             iterations = duration * self.calculate_fps()
-        img = self.get_frame()
-        dead = 0
+        #img = self.get_frame()
+        #dead = 0
         while iterations > 0:
-            new_img = self.get_frame()
+            # new_img = self.get_frame()
+            new_img = self.get_raw_frame(41,191,382,518)
             cv2.imshow(title, new_img)
+            # print(getProgress(new_img,0,274,0))
             iterations -= 1
-            if is_dead(img, new_img):
-                dead += 1
-                print("Death: ", dead)
+            #if is_dead(img, new_img):
+               # dead += 1
+              #  print("Death: ", dead)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()
                 break
-            img = new_img
+            #img = new_img
     
     # Probably not needed anymore
     def update_terminal_image(self, dead_name="dead", goal_name="goal", path=".venv\\images\\",

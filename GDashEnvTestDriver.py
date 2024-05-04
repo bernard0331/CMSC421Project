@@ -15,7 +15,7 @@ import gymnasium as gym
 living_reward = 1
 death_penalty = -100
 is_dead_threshold = 0.91                                        
-game = GDashEnv(30,20,30,40,living_reward,death_penalty,is_dead_threshold, down_scaling=False,
+game = GDashEnv(80,100,240,160,living_reward,death_penalty,is_dead_threshold, down_scaling=False,
                 scale_height_factor=1, scale_width_factor=1, scale_width_offset=60,scale_height_offset=140)
 print("Frame shape: ",game.observation_space.shape)
 
@@ -24,7 +24,6 @@ print("Frame shape: ",game.observation_space.shape)
 
 run = 0
 iterations = 5 # Number of iterations you want to run
-
 print("Frame fps: ",eh.get_environment_fps(game))
 
 for i in range(iterations):
@@ -34,7 +33,7 @@ for i in range(iterations):
         # Causes agent to choose action at random (jump or not jump).
         action = game.action_space.sample()
         observation, reward, terminated = game.step(action)
-        # game.render()                         
+        game.render()                         
     run += 1   
     print("Run #", run, " Reward: ", reward)
 

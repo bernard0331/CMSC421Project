@@ -3,7 +3,7 @@ from gymnasium import spaces
 import numpy as np
 from FrameHelper import FrameProcessor
 import EnvironmentHelper
-from EnvironmentHelper import is_dead
+from EnvironmentHelper import is_dead, is_dead_progress
 import pygetwindow as gw
 import cv2
 from pynput.keyboard import Key, Controller
@@ -13,11 +13,9 @@ class GDashEnv(gym.Env):
     """A custom gymnasium environment designed for the game Geometry Dash. 
     Requires that Geometry Dash be running when being used.
     """
-    JUMP = 1
-    IDLE = 0
     
-    def __init__(self, top_offset=30, left_offset=10, width_offset=20,
-                 height_offset=40, survival_reward=1, death_penalty=-100, 
+    def __init__(self, top_offset=80, left_offset=100, width_offset=240,
+                 height_offset=160, survival_reward=1, death_penalty=-100, 
                  is_dead_threshold=0.91, down_scaling=False, scale_width_factor=1,
                  scale_height_factor=1, scale_width_offset=60, scale_height_offset=140):
         """Constructor for a GDashEnv object. Arguments determine the size of the screenshots
@@ -25,13 +23,13 @@ class GDashEnv(gym.Env):
 
         Args:
             top_offset (int, optional): Defines top coordinate of screenshot of game used 
-                relative to the top of the game window. Defaults to 0.
+                relative to the top of the game window. Defaults to 80.
             left_offset (int, optional): Defines the left coordinate of screenshot of game
-                used relative to left edge of game window. Defaults to 0.
+                used relative to left edge of game window. Defaults to 100.
             width_offset (int, optional): The amount of pixels subtracted from the width
-                of the game window. Defaults to 0.
+                of the game window. Defaults to 240.
             height_offset (int, optional): The amount of pixels subtracted from the height
-                of the game window. Defaults to 0.
+                of the game window. Defaults to 160.
             survival_reward (int, optional): The reward for surving one step. Defaults to 1.
                 death_penalty (int, optional): The penalty for dying. Defaults to -100.
             is_dead_threshold (float, optional): The threshold for is_dead() method used to 
@@ -70,6 +68,8 @@ class GDashEnv(gym.Env):
         self.survival_reward = survival_reward
         self.death_penalty = death_penalty
         self.is_dead_threshold = is_dead_threshold
+        self.JUMP = 1
+        self.IDLE = 0
     
     def _get_obs(self):
         """Basic getter for the current observation (current frame of the game)."""
@@ -88,9 +88,9 @@ class GDashEnv(gym.Env):
         self.g_window.activate()
         # Presses space to start or restart level.
         self.press_space()
-        # Sleeps for 0.5 serconds to allow death screen to fully dissappear. 
+        # Sleeps for 0.5 seconds to allow death screen to fully dissappear. 
         # Otherwise, environment thinks agent died multiple times in one iteration.
-        time.sleep(0.5)                    
+        time.sleep(0.7)                    
         self.observation = self.frame_processor.get_frame()
         self.reward = 0
         return self.observation
@@ -107,8 +107,8 @@ class GDashEnv(gym.Env):
                 is terminated.
         """
         reward = self.reward
-        raw_img = self.frame_processor.get_raw_frame(35,180,330,100)
-        terminated = is_dead(raw_img, (11, 394))
+        raw_img = self.frame_processor.get_raw_frame()
+        terminated = is_dead_progress(raw_img)
         if terminated:
             reward += self.death_penalty
         else:

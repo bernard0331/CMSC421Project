@@ -1,5 +1,5 @@
 from FrameHelper import FrameProcessor
-from EnvironmentHelper import is_dead
+from EnvironmentHelper import is_dead_progress
 import cv2
 from GeometryDashEnvironment import GDashEnv
 
@@ -23,6 +23,9 @@ frame_processor = FrameProcessor(GAME,60,100,240,160)
 
 # Displays the frames of geometry dash for 30 seconds.
 # Feel free to change the duration.
+img = frame_processor.get_raw_frame(41,191,382,518)
+print(img.shape)
+print(img)
 frame_processor.display_frames(30)
 #frame_processor.save_sct("isDead.jpg")
 #frame_processor.save_sct("notDead.jpg")

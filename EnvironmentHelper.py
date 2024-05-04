@@ -7,6 +7,11 @@ def is_dead(img, button_loc):
     x, height = button_loc
     pixel = img[height][x]
     return pixel[1] > 160 and pixel[0] < pixel[1] and pixel[2] < pixel[1]
+
+def is_dead_progress(img, range_start=0, range_end=274, height=0):
+    if getProgress(img, range_start, range_end, height) == 0.0:
+        return True
+    return False
     
 def getProgress(img, range_start, range_end, height):
     samples = range(range_start, range_end)
@@ -14,10 +19,10 @@ def getProgress(img, range_start, range_end, height):
     green_count = 0
 
     for x in samples:
-        pixel = img.pixel(x,height)
+        pixel = img[height][x]
         if(pixel[1] > 160 and pixel[0] < pixel[1] and pixel[2] < pixel[1]):
             green_count += 1
-
+    
     return green_count/len(samples)
     
 def get_environment_fps(game):
