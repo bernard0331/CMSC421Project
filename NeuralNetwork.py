@@ -19,8 +19,14 @@ class NeuralNetwork:
         self.gamma = gamma 
         self.neural = km.Sequential()
         self.neural.add(kl.Input(shape=(1,self.GD.observation_space.n)))
-        self.neural.add(kl.Dense(512), activation="relu")
-        self.neural.add(kl.Dense(2))
+        self.neural.add(kl.Conv2D(2, 512, strides=1, activation="relu"))
+        self.neural.add(kl.Conv2D(512, 128, strides=1, activation="relu"))
+        self.neural.add(kl.Conv2D(128, 64, strides=1, activation="relu"))
+        self.neural.add(kl.Conv2D(64, 32, strides=1, activation="relu"))
+        self.neural.add(kl.Conv2D(32, 4, strides=1, activation="relu"))
+        self.neural.flatten()
+        self.neural.add(kl.Dense(64, activation="relu"))
+        self.neural.add(kl.Dense(GD.action_space.n))
         self.neural.compile(loss='mse')
 
 
