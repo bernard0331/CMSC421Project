@@ -26,8 +26,9 @@ class NeuralNetwork:
         self.neural.add(kl.Conv2D(32, 4, strides=1, activation="relu"))
         self.neural.flatten()
         self.neural.add(kl.Dense(64, activation="relu"))
-        self.neural.add(kl.Dense(GD.action_space.n))
-        self.neural.compile(loss='mse')
+        self.neural.add(kl.Dense(self.GD.action_space.n, activation='linear'))  # Output layer for Q-values
+        self.neural.compile(optimizer='adam', loss='mse')  # Using Mean Squared Error for Q-learning
+
 
 
 
@@ -42,7 +43,8 @@ class NeuralNetwork:
        # else:
        #     ten_obs = k.ops.convert_to_tensor(observation)
         #    return k.ops.max(self.neural(ten_obs,Training=False)[0])
-        
+
+    '''   
     #predicitng the action alternates between random and prediction 
     def predict_action(self, observation):
         action_choice = [True, False]
@@ -55,6 +57,7 @@ class NeuralNetwork:
             # as well as in the comment below below 
             # k.ops.max(self.neural.predict(np.identity(self.GD.observation_space.n)[new_obs:new_obs + 1]))
             return k.ops.max(self.neural.predict(observation))
+
         
     #def update_network(self, new_obs, reward, terminated):
     #    ten_obs = k.ops.convert_to_tensor(new_obs)
@@ -68,8 +71,29 @@ class NeuralNetwork:
         Goal = reward+self.gamma*k.ops.max(self.neural.predict(new_obs))
         #self.neural.fit(np.identity(self.GD.observation_space.n)[new_obs:new_obs + 1], [Goal].reshape(-1, self.GD.action_space.n))
         self.neural.fit(new_obs, [Goal].reshape(-1, self.GD.action_space.n))
-
+        '''
     
+        # Predicting the action alternates between random and prediction based on exploration rate
+    def predict_action(self, observation):
+        if random.random() < self.exp:
+            return random.choice([0, 1])  # Choosing a random action
+        else:
+            return np.argmax(self.neural.predict(observation))  # Choosing the best action based on Q-values
+
+    # Updates the fit of the network based upon the new observation
+    def update_network(self, new_obs, reward, observation, terminated):
+        current_q = self.neural.predict(observation)
+        new_q = self.neural.predict(new_obs)
+        max_new_q = np.max(new_q)
+        
+        # Q-learning update rule
+        if terminated:
+            current_q[0, np.argmax(current_q)] = reward
+        else:
+            current_q[0, np.argmax(current_q)] = reward + self.gamma * max_new_q
+        
+        # Fit the model
+        self.neural.fit(observation, current_q, verbose=0)
     
 
 
