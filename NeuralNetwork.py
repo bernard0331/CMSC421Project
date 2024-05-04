@@ -65,8 +65,6 @@ class NeuralNetwork:
 
     #updates the fit of the nwtork based upon the new observation
     def update_network(self, new_obs, reward, observation, terminated):
-        ten_obs = k.ops.convert_to_tensor(new_obs)
-        x = k.ops.max(self.neural(ten_obs,Training=False)[0])
         Goal = reward+self.gamma*k.ops.max(self.neural.predict(new_obs))
         #self.neural.fit(np.identity(self.GD.observation_space.n)[new_obs:new_obs + 1], [Goal].reshape(-1, self.GD.action_space.n))
         self.neural.fit(new_obs, [Goal].reshape(-1, self.GD.action_space.n))
