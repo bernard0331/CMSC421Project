@@ -16,7 +16,7 @@ class NeuralNetwork:
         # the code needs to be updated 
     def __init__(self, alpha=0.98, max_experience=10000, batch_size = 4, num_of_runs=1000,
                 eps=0.5, eps_decay=0.999, gamma=0.98, lr=0.001, n=20, env=GDashEnv(),
-                target_frames=10000, eps_min = 0.1, rand_batch=False, double_q=False):
+                target_epochs=50, eps_min = 0.1, rand_batch=False, double_q=False):
         self.GD = env
         self.action_space = self.GD.action_space
         self.num_actions = self.GD.action_space.n
@@ -46,7 +46,7 @@ class NeuralNetwork:
         self.eps_min = eps_min
         self.gamma = gamma
         self.lr = lr 
-        self.target_frames = target_frames
+        self.target_epochs = target_epochs
         self.n = n
         self.neural = self.build_model()
         if double_q:
@@ -112,7 +112,7 @@ class NeuralNetwork:
 
     # Updates the fit of the network based upon the new observation
     def update_network(self):
-        if self.rand_batch:
+        if self.rand_batch: # Random batch implementation
             if self.experience_count < self.batch_size:
                 return
             observations, actions, rewards, new_obs_exp, terminated_exp = self.sample_experiences()
@@ -121,17 +121,23 @@ class NeuralNetwork:
             action_indxs = np.dot(actions, action_opts)
             
             q_table = self.neural.predict(observations, verbose=0)
-           
-            new_q_table = self.neural_target.predict(new_obs_exp, verbose=0) if self.double_q else self.neural.predict(new_obs_exp, verbose=0)
             
-            q_target = q_table.copy()
+            new_q_target = self.neural_target.predict(new_obs_exp,verbose=0) if self.double_q else None
+           
+            new_q = self.neural.predict(new_obs_exp, verbose=0)
+            
+            max_actions = np.argmax(q_table, axis=1) if self.double_q else None
+            
+            q_target = q_table if self.double_q else q_table.copy()
             
             indx = np.arange(self.batch_size, dtype=np.int32)
-            
-            q_target[indx, action_indxs] = rewards + (self.gamma * np.max(new_q_table, axis=1)) * terminated_exp
+            if self.double_q:
+                q_target[indx, action_indxs] = rewards + self.gamma * new_q_target[indx, max_actions.astype(int)] * terminated_exp
+            else:
+                q_target[indx, action_indxs] = rewards + (self.gamma * np.max(new_q, axis=1)) * terminated_exp
             
             self.neural.fit(observations, q_target, verbose=0)
-        else:
+        else: # N-step implementation
             if self.experience_count < self.n:
                 return
             
@@ -179,7 +185,6 @@ class NeuralNetwork:
     def train_model_FPS(self, num_iterations=50, model_file_path=".venv\\Models\\",
                     model_name="FPS.keras", target_name="FPSTarget.keras", render=False,
                     log_file_path=".venv\\TrainingLogs\\FPS.txt", explore_frames=100):
-        
         training_results = np.empty((num_iterations,5)) 
         absolute_max_progress = 0.0
         game = self.GD
@@ -196,9 +201,6 @@ class NeuralNetwork:
             reward = 0.0
             start_frame = self.frame_count
             while not terminated and time.time() - time_start < 30:
-                if self.double_q:
-                    if self.frame_count % self.target_frames == 0:
-                        self.update_target()
                 action = self.predict_action(observation)
                 new_obs, reward, terminated, progress = game.step(action)
                 
@@ -277,6 +279,8 @@ class NeuralNetwork:
             self.neural = km.load_model(model_file_path+model_name)
             if self.double_q:
                 self.neural_target = km.load_model(model_file_path+target_name)
+        if self.double_q:
+            self.update_target()
         self.neural.save(model_file_path+model_name)
         if self.double_q:
             self.neural_target.save(model_file_path+target_name)
@@ -304,9 +308,6 @@ class NeuralNetwork:
             reward = 0.0
             start_frame = self.frame_count
             while not terminated:
-                if self.double_q:
-                    if self.frame_count % self.target_frames == 0:
-                        self.update_target()
                 action = self.predict_action(observation)
                 new_obs, reward, terminated, progress = game.step(action)
                 
@@ -328,6 +329,9 @@ class NeuralNetwork:
             # Decaying Epsilon
             if self.eps > self.eps_min and self.frame_count > explore_frames:
                 self.eps *= self.exp_decay
+                
+            if self.double_q and i % self.target_epochs == 0 and i > 0:
+                self.update_target()
             
             # Tracking Progress
             training_results[i,0] = max_progress

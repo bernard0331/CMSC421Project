@@ -118,9 +118,9 @@ class GDashEnv(gym.Env):
         reward = 0.0
         raw_img = self.frame_processor.get_raw_frame()
         terminated, progress = is_dead_progress(raw_img, self.progress)
-        #if progress > 99:
-            #terminated = True
-           # reward = self.goal_reward
+        if progress > 99:
+            terminated = True
+            reward = self.goal_reward
         elif terminated:
             reward = self.survival_reward - jump_pen + self.death_penalty
             #reward = self.survival_reward * self.progress + self.cur_jump_penalty + self.death_penalty

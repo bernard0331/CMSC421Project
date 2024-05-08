@@ -24,11 +24,11 @@ MAX_FRAME_TIME = 1/120
 # Window Parameters
 # wind_width should be 260 and win_height should be 220
 win_width, win_height = 260,220 #WARNING: changing these will break getProgress and is_dead_progress
-top,left,width_off,height_off = 96,104,122,138 
+top,left,width_off,height_off = 90,80,100,130 
 
 # Reward parameters
 living_reward = 1
-death_penalty = -16
+death_penalty = -32
 goal_reward = 100
 jump_pen = 0.5
 
@@ -42,28 +42,28 @@ game = GDashEnv(top_offset=top, left_offset=left, width_offset=width_off, height
 # Q-Learning and Neural Network parameters
 gamma = 0.98
 epsilon = 1.0
-eps_decay = 0.985
+eps_decay = 0.99
 eps_min = 0.05
 lr = 0.001
 batch_size = 16
 max_exp = 100000
-target_frames = 3000
-n = 16
+target_epochs = 50
+n = 20
 
-rand_batch = False                          
+rand_batch = True                         
 double_q = False
 
 # Initializing the neural network with the game environment
 nn = NeuralNetwork(gamma=gamma, lr=lr, batch_size=batch_size, max_experience=max_exp,
                    eps=epsilon, eps_decay=eps_decay, env=game, n=n, eps_min=eps_min,
-                   target_frames=target_frames, rand_batch=rand_batch, double_q=double_q)
+                   target_epochs=target_epochs, rand_batch=rand_batch, double_q=double_q)
 
 model_file_path= ".venv\\Models\\"
-model_name = "michaelScott4-Canny-NoDouble-NoCube.keras"
-target_name = "michaelScottTarget4-Canny-NoDouble-NoCube.keras"
-log_file_path = ".venv\\TrainingLogs\\michaelScott4-Canny-NoDouble-NoCube.txt"
+model_name = "michaelScott5-Double-test.keras"
+target_name = "michaelScottTarget5-Double-test.keras"
+log_file_path = ".venv\\TrainingLogs\\michaelScott5-Double-test.txt"
 
-notes = "No Canny, no double_q, larger jump penalty, no block in frame"
+notes = "Rand batch batch size 16"
 
 # set to True if you want to load a saved model (double check name)
 # If loading, recommend to adjust epsilon and explore_frames
@@ -77,13 +77,13 @@ explore_frames = 3000
 # set to True to test fps before training
 test_fps = True
 # Set to True to see render during fps testing - will lower fps
-render = True
+render = False
 # set to True to train
 train = True
 
 # Testing fps with training steps
 if test_fps:
-    nn.train_model_FPS()
+    nn.train_model_FPS(render=render)
 
 # Training the model
 if train:
