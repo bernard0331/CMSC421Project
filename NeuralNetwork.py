@@ -275,7 +275,11 @@ class NeuralNetwork:
                     notes="Notes", explore_frames=5000):
         if load:
             self.neural = km.load_model(model_file_path+model_name)
-            self.neural_target = km.load_model(model_file_path+target_name)
+            if self.double_q:
+                self.neural_target = km.load_model(model_file_path+target_name)
+        self.neural.save(model_file_path+model_name)
+        if self.double_q:
+            self.neural_target.save(model_file_path+target_name)
         log = open(log_file_path,"a")
         print("\nModel: ",model_name,"\n",file=log)
         print("\n",notes,"\n",file=log)
@@ -363,14 +367,16 @@ class NeuralNetwork:
             # Saving Weights every 500 runs
             if i % 500 == 0 and i > 0: 
                 self.neural.save(model_file_path+model_name)
-                self.neural_target.save(model_file_path+target_name)
+                if self.double_q:
+                    self.neural_target.save(model_file_path+target_name)
             log.close()
             
         log = open(log_file_path,"a")
         print("\n---------- End Training ----------\n\n",file=log)
         
         self.neural.save(model_file_path+model_name)
-        self.neural_target.save(model_file_path+target_name)
+        if self.double_q:
+            self.neural_target.save(model_file_path+target_name)
         
         for i in range(num_iterations):
             if (i+1) % 50 == 0:
