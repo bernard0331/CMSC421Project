@@ -16,3 +16,9 @@ def getProgress(img, range_start, range_end, height):
             green_count += 1
     
     return green_count/len(samples)
+
+def is_dead_progress(progress, previous_progress):
+    # Only consider dead if progress is zero and it was previously above 0%
+    if progress == 0.0 and previous_progress > 0.0:
+        return True
+    return False

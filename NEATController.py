@@ -1,10 +1,11 @@
 import neat
 import visualize
-from NEATHelper import is_dead, getProgress
+from NEATHelper import is_dead, getProgress, is_dead_progress
 from FrameHelper import FrameProcessor
 from pynput.keyboard import Key, Controller
 import pickle
 import time
+import skimage
 
 class NEATController:
     """Holds an instance of population"""
@@ -53,32 +54,45 @@ class NEATController:
         elif network == None:
             raise ValueError("Network not found, run evolve first or provide a network")
         
+        jumps = 0
+
         print("Starting Run")
         self.keyboard.press(Key.space)
         
         self.keyboard.release(Key.space)
         time.sleep(0.2)
-        progress = 0.0
+        curr_progress = 0.0
+        best_prog = 0.0
         img = self.frame_processor.get_frame()
         dead = False
         while not dead:
             img = self.frame_processor.get_frame()
+            img = skimage.transform.resize(img, (36, 42), anti_aliasing=True)
+            
             raw_img = self.frame_processor.get_raw_frame(35,180,330,100)
             
-            progress = max(getProgress(raw_img, 13, 283, 6), progress)
-            
+            curr_progress = getProgress(raw_img, 13, 283, 6)
+            best_prog = max(best_prog, curr_progress)
+
             if is_dead(raw_img, (11, 394)):
+                break
+            if is_dead_progress(curr_progress, best_prog):
                 break
             
             action = network.activate(img.reshape(-1))[0]
             if action >= 0.5:
                 self.keyboard.press(Key.space)
+                jumps += 1
                 
-        time.sleep(0.05)
-        self.keyboard.release(Key.space)
+            time.sleep(0.05)
+            self.keyboard.release(Key.space)
+        
         print("Agent died")
 
-        return progress
+        if(best_prog == 1):
+            return best_prog*100
+        else:
+            return (best_prog*10)^2 - jumps*.01
 
     def evolve(self, generations=10):
         """Runs evolution on the population"""

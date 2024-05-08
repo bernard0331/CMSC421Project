@@ -15,7 +15,7 @@ frame_processor = FrameProcessor(GAME,60,100,240,160)
 
 # The amount of fps we can achieve with the current     
 # hardware and preprocessing.
-#print("FPS: ", frame_processor.calculate_fps())
+#print("FPS: ", frame_processor.calculate_fps()  )
 
 # Displays the frames of geometry dash for 30 seconds.
 # Feel free to change the duration.
@@ -34,10 +34,13 @@ saveload_path = os.path.join(local_dir, 'cache.pkl')
 
 print("Starting NEAT")
 nc = NEATController(config_path, frame_processor)
-nc.evolve(100)
+#nc.evolve(0)
+#nc.load_checkpoint("trial-1-cp ")
+nc.evolve(1000)
+
 #print("Winner decided, saving winner")
 #nc.save_model(saveload_path)
 #print("Saved, playing final model")
 #progress = nc.eval()
-#print(progress)
+#print(progress)       
 #nc.show_model()
