@@ -1,4 +1,3 @@
-from skimage.metrics import structural_similarity
 import time
 
 
@@ -8,22 +7,27 @@ def is_dead(img, button_loc):
     pixel = img[height][x]
     return pixel[1] > 160 and pixel[0] < pixel[1] and pixel[2] < pixel[1]
 
-def is_dead_progress(img, range_start=0, range_end=274, height=0):
-    if getProgress(img, range_start, range_end, height) == 0.0:
-        return True
-    return False
+def is_dead_progress(img, previous_progress, range_start=0, range_end=106, height=0):
+    progress = getProgress(img, range_start, range_end, height)
+    # Only consider dead if progress is zero and it was previously above 0%
+    if progress == 0.0 and previous_progress > 0.0:
+        return True, progress
+    return False, progress
     
 def getProgress(img, range_start, range_end, height):
-    samples = range(range_start, range_end)
+    total_pixels = range_end - range_start
     height = height
     green_count = 0
 
-    for x in samples:
+    for x in range(total_pixels):
         pixel = img[height][x]
-        if(pixel[1] > 160 and pixel[0] < pixel[1] and pixel[2] < pixel[1]):
+        # Green is dominant and above a brightness threshold
+        if(pixel[1] > 140 and pixel[0] < pixel[1] and pixel[2] < pixel[1]):
             green_count += 1
     
-    return green_count/len(samples)
+    # Calculate the percentage of green pixels
+    progress_percentage = (green_count/total_pixels) * 100
+    return round(progress_percentage,4)
     
 def get_environment_fps(game):
     """Calculates the approximate fps of running the environment.
