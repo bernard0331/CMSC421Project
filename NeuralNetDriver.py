@@ -42,40 +42,40 @@ game = GDashEnv(top_offset=top, left_offset=left, width_offset=width_off, height
 # Q-Learning and Neural Network parameters
 gamma = 0.98
 epsilon = 1.0
-eps_decay = 0.99
-eps_min = 0.05
-lr = 0.001
-batch_size = 16
+eps_decay = 0.995
+eps_min = 0.01
+lr = 0.0005
+batch_size = 32
 max_exp = 100000
-target_epochs = 50
+target_frames = 100
 n = 20
 
 rand_batch = True                         
-double_q = False
+double_q = True
 
 # Initializing the neural network with the game environment
 nn = NeuralNetwork(gamma=gamma, lr=lr, batch_size=batch_size, max_experience=max_exp,
                    eps=epsilon, eps_decay=eps_decay, env=game, n=n, eps_min=eps_min,
-                   target_epochs=target_epochs, rand_batch=rand_batch, double_q=double_q)
+                   target_frames=target_frames, rand_batch=rand_batch, double_q=double_q)
 
 model_file_path= ".venv\\Models\\"
-model_name = "michaelScott5-Double-test.keras"
-target_name = "michaelScottTarget5-Double-test.keras"
-log_file_path = ".venv\\TrainingLogs\\michaelScott5-Double-test.txt"
+model_name = "michaelScott6.keras"
+target_name = "michaelScottTarget6.keras"
+log_file_path = ".venv\\TrainingLogs\\michaelScott6.txt"
 
-notes = "Rand batch batch size 16"
+notes = "No Canny, target_frames=100"
 
 # set to True if you want to load a saved model (double check name)
 # If loading, recommend to adjust epsilon and explore_frames
 load = False
 
-iterations = 250 # Number of iterations you want to run
+iterations = 2500 # Number of iterations you want to run
 
 # The amount of frames before epsilon starts decaying
 explore_frames = 3000
 
 # set to True to test fps before training
-test_fps = True
+test_fps = False
 # Set to True to see render during fps testing - will lower fps
 render = False
 # set to True to train

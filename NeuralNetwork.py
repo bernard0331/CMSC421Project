@@ -16,7 +16,7 @@ class NeuralNetwork:
         # the code needs to be updated 
     def __init__(self, alpha=0.98, max_experience=10000, batch_size = 4, num_of_runs=1000,
                 eps=0.5, eps_decay=0.999, gamma=0.98, lr=0.001, n=20, env=GDashEnv(),
-                target_epochs=50, eps_min = 0.1, rand_batch=False, double_q=False):
+                target_frames=500, eps_min = 0.1, rand_batch=False, double_q=False):
         self.GD = env
         self.action_space = self.GD.action_space
         self.num_actions = self.GD.action_space.n
@@ -46,7 +46,7 @@ class NeuralNetwork:
         self.eps_min = eps_min
         self.gamma = gamma
         self.lr = lr 
-        self.target_epochs = target_epochs
+        self.target_frames = target_frames
         self.n = n
         self.neural = self.build_model()
         if double_q:
@@ -193,6 +193,8 @@ class NeuralNetwork:
         time_start = time.time()
         i = 0
         while time.time() - time_start < 30:
+            if self.double_q and self.frame_count % self.target_frames == 0 and i > 0:
+                    self.update_target()
             log = open(log_file_path,"a")
             observation = self.GD.reset()
             observation = frame_processor.prepare_for_nn(observation)  # Use centralized preprocessing
@@ -267,20 +269,19 @@ class NeuralNetwork:
             log.close()
             i += 1
         self.frame_count = 0
-        self.neural = self.build_model()
-        self.neural_target = self.build_model()
         print("\nFPS: ",np.round((fps/30),0))
     
     # Trains Model
     def train_model(self, num_iterations, load=False, model_file_path=".venv\\Models\\",
                     model_name="Model.keras", target_name="Target.keras", log_file_path=None,
                     notes="Notes", explore_frames=5000):
+        self.neural = self.build_model()
+        if self.double_q:
+            self.neural_target = self.build_model()
         if load:
             self.neural = km.load_model(model_file_path+model_name)
             if self.double_q:
                 self.neural_target = km.load_model(model_file_path+target_name)
-        if self.double_q:
-            self.update_target()
         self.neural.save(model_file_path+model_name)
         if self.double_q:
             self.neural_target.save(model_file_path+target_name)
@@ -308,6 +309,8 @@ class NeuralNetwork:
             reward = 0.0
             start_frame = self.frame_count
             while not terminated:
+                if self.double_q and self.frame_count % self.target_frames == 0 and i > 0:
+                    self.update_target()
                 action = self.predict_action(observation)
                 new_obs, reward, terminated, progress = game.step(action)
                 
@@ -329,9 +332,6 @@ class NeuralNetwork:
             # Decaying Epsilon
             if self.eps > self.eps_min and self.frame_count > explore_frames:
                 self.eps *= self.exp_decay
-                
-            if self.double_q and i % self.target_epochs == 0 and i > 0:
-                self.update_target()
             
             # Tracking Progress
             training_results[i,0] = max_progress
