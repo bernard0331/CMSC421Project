@@ -24,7 +24,10 @@ MAX_FRAME_TIME = 1/120
 # Window Parameters
 # wind_width should be 260 and win_height should be 220
 win_width, win_height = 260,220 #WARNING: changing these will break getProgress and is_dead_progress
-top,left,width_off,height_off = 90,80,100,130 
+top,left,width_off,height_off = 90,80,100,130
+
+# Set true if training on space section, else False
+space = True
 
 # Reward parameters
 living_reward = 1
@@ -37,16 +40,16 @@ game = GDashEnv(top_offset=top, left_offset=left, width_offset=width_off, height
                 win_width=win_width, win_height=win_height, survival_reward=living_reward, 
                 death_penalty=death_penalty, down_scaling=False, scale_height_factor=1, 
                 scale_width_factor=1, scale_width_offset=180, scale_height_offset=208,
-                jump_penalty=jump_pen, goal_reward=goal_reward)
+                jump_penalty=jump_pen, goal_reward=goal_reward, space=space)
 
 # Q-Learning and Neural Network parameters
 gamma = 0.98
 epsilon = 1.0
-eps_decay = 0.995
+eps_decay = 0.985
 eps_min = 0.01
-lr = 0.0005
+lr = 0.001
 batch_size = 32
-max_exp = 100000
+max_exp = 200000
 target_frames = 100
 n = 20
 
@@ -63,16 +66,16 @@ model_name = "michaelScott6.keras"
 target_name = "michaelScottTarget6.keras"
 log_file_path = ".venv\\TrainingLogs\\michaelScott6.txt"
 
-notes = "No Canny, target_frames=100"
+notes = "Rocket ship part, sesh 2, eps_decay 0.995 -> 0.985, lr 0.0005 -> 0.001, max_exp 100000 -> 200000, \nnew spaceship action behavior - threading"
 
 # set to True if you want to load a saved model (double check name)
 # If loading, recommend to adjust epsilon and explore_frames
-load = False
+load = True
 
-iterations = 2500 # Number of iterations you want to run
+iterations = 500 # Number of iterations you want to run
 
 # The amount of frames before epsilon starts decaying
-explore_frames = 3000
+explore_frames = 5000
 
 # set to True to test fps before training
 test_fps = False

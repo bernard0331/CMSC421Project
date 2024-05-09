@@ -291,7 +291,7 @@ class NeuralNetwork:
         print("Iterations: ",num_iterations," Gamma: ",self.gamma," Epsilon: ",self.eps,
               "\nEpsilon Decay: ",self.exp_decay," Learning Rate: ",self.lr,
               " Batch Size: ",self.batch_size,"\n",file=log)
-        training_results = np.empty((num_iterations,5)) 
+        training_results = np.empty((num_iterations,6)) 
         absolute_max_progress = 0.0
         game = self.GD
         print("Living Factor: ",game.survival_reward," Death Penalty: ",game.death_penalty,
@@ -308,6 +308,7 @@ class NeuralNetwork:
             max_progress = 0.0
             reward = 0.0
             start_frame = self.frame_count
+            time_start = time.time()
             while not terminated:
                 if self.double_q and self.frame_count % self.target_frames == 0 and i > 0:
                     self.update_target()
@@ -326,7 +327,8 @@ class NeuralNetwork:
                 
                 self.frame_count += 1
                 # game.render()
-                
+            
+            run_time = time.time() - time_start
             end_frame = self.frame_count
             
             # Decaying Epsilon
@@ -339,6 +341,7 @@ class NeuralNetwork:
             training_results[i,2] = game.cur_jumps
             training_results[i,3] = self.eps
             training_results[i,4] = end_frame - start_frame
+            training_results[i,5] = run_time
             
             if max_progress > absolute_max_progress:
                 absolute_max_progress = max_progress
@@ -358,18 +361,22 @@ class NeuralNetwork:
                 avg_jumps_per_prog = np.round(avg_jumps/avg_prog,0)
                 avg_epsilon = np.mean(training_results[(i-49):i,3])
                 avg_frames = np.mean(training_results[(i-49):i,4])
+                avg_run_time = np.mean(training_results[(i-49):i,5])
+                avg_fps = avg_frames / avg_run_time
                 
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames,"\n",file=log)
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps,"\n",file=log)
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames,"\n")
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps,"\n")
             
             # Saving Weights every 500 runs
-            if i % 500 == 0 and i > 0: 
+            if i % 50 == 0 and i > 0: 
                 self.neural.save(model_file_path+model_name)
                 if self.double_q:
                     self.neural_target.save(model_file_path+target_name)
@@ -392,15 +399,19 @@ class NeuralNetwork:
                 avg_jumps_per_prog = np.round(avg_jumps/avg_prog,0)
                 avg_epsilon = np.mean(training_results[(i-49):i,3])
                 avg_frames = np.mean(training_results[(i-49):i,4])
+                avg_run_time = np.mean(training_results[(i-49):i,5])
+                avg_fps = avg_frames / avg_run_time
                 
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames,file=log)
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps,file=log)
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames)
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps)
             
         print("\nAverage first 10 iterations: ", np.mean(training_results[:10,0]),"\n",
               "Average first 100 iterations: ", np.mean(training_results[:10,0]),"\n\n",
