@@ -6,6 +6,9 @@ from pynput.keyboard import Key, Controller
 import pickle
 import time
 import skimage
+from skimage import exposure
+from PIL import Image
+import cv2
 
 class NEATController:
     """Holds an instance of population"""
@@ -31,6 +34,7 @@ class NEATController:
         self.stats = neat.StatisticsReporter()
         self.pop.add_reporter(self.stats)
         self.pop.add_reporter(neat.Checkpointer(5))
+
 
 
     def show_model(self):
@@ -61,14 +65,19 @@ class NEATController:
         
         self.keyboard.release(Key.space)
         time.sleep(0.2)
+        #start = time.perf_counter()
         curr_progress = 0.0
         best_prog = 0.0
         img = self.frame_processor.get_frame()
         dead = False
         while not dead:
             img = self.frame_processor.get_frame()
-            img = skimage.transform.resize(img, (36, 42), anti_aliasing=True)
-            
+            img = skimage.transform.resize(img, (46, 22), anti_aliasing=True)
+            img = exposure.adjust_gamma(img, gamma=.25, gain=1)
+            #cv2.imshow("GD", img)
+            #if cv2.waitKey(1) & 0xFF == ord("q"):
+            #    cv2.destroyAllWindows()
+            #    break
             raw_img = self.frame_processor.get_raw_frame(35,180,330,100)
             
             curr_progress = getProgress(raw_img, 13, 283, 6)
@@ -87,12 +96,14 @@ class NEATController:
             time.sleep(0.05)
             self.keyboard.release(Key.space)
         
+        #end = time.perf_counter() - start
         print("Agent died")
 
         if(best_prog == 1):
-            return best_prog*100
+            return 100
         else:
-            return (best_prog*10)^2 - jumps*.01
+            return (best_prog*10)**2 - jumps*.01
+        
 
     def evolve(self, generations=10):
         """Runs evolution on the population"""
@@ -122,3 +133,7 @@ class NEATController:
     def load_checkpoint(self, path):
         """Restores population from a file"""
         self.pop = neat.Checkpointer.restore_checkpoint(path)
+        self.pop.add_reporter(neat.StdOutReporter(True))
+        self.stats = neat.StatisticsReporter()
+        self.pop.add_reporter(self.stats)
+        self.pop.add_reporter(neat.Checkpointer(5))
