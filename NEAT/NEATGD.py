@@ -1,5 +1,5 @@
-from FrameHelper import FrameProcessor
-from NEATController import NEATController
+from NEAT.FrameHelper import FrameProcessor
+from NEAT.NEATController import NEATController
 import os
 import skimage
 from skimage import exposure
@@ -18,27 +18,6 @@ GAME = GD
 
 frame_processor = FrameProcessor(GAME,60,170,300,80)
 
-# The amount of fps we can achieve with the current     
-# hardware and preprocessing.
-#print("FPS: ", frame_processor.calculate_fps()  )
-
-#Prints model image
-#time.sleep(5)
-#img = frame_processor.get_frame()
-#img = cv2.merge((img,img,img))
-#img = skimage.transform.resize(img, (46, 22), anti_aliasing=True)
-#img = exposure.adjust_gamma(img, gamma=.25, gain=1)      
-#img = Image.fromarray((img * 255).astype(np.uint8))
-#img.show()
-
-# Displays the frames of geometry dash for 30 seconds.
-# Feel free to change the duration.
-#print(frame_processor.display_frames(30))
-
-
-#img = frame_processor.get_raw_frame(35,180,330,100)
-#img = Image.fromarray(img)
-#img.show()
 
 #Runs NEAT
 local_dir = os.path.dirname(__file__)
@@ -57,4 +36,3 @@ nc.evolve(1000)
 #print("Saved, playing final model")
 #progress = nc.eval()
 #print(progress)       
-#nc.show_model()

@@ -1,6 +1,6 @@
 import neat
 import visualize
-from NEATHelper import is_dead, getProgress, is_dead_progress
+from NEAT.NEATHelper import is_dead, getProgress, is_dead_progress
 from FrameHelper import FrameProcessor
 from pynput.keyboard import Key, Controller
 import pickle
