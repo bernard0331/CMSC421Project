@@ -52,10 +52,7 @@ class NeuralNetwork:
         if (choice[0] == True):
             return random.choice([0,1])
         else:
-            #Also unsure of what I need tp use in predict some things in the keras documentation i've found suggest 
-            # using np.identitty like I try to do in the update comment but I've found conflicting info on that which is why it's commented out
-            # as well as in the comment below below 
-            # k.ops.max(self.neural.predict(np.identity(self.GD.observation_space.n)[new_obs:new_obs + 1]))
+            #Also unsure of what I need tp use in predict some things in the keras documentation 
             return k.ops.max(self.neural.predict(observation))
 
         
@@ -65,12 +62,6 @@ class NeuralNetwork:
      #   Goal = reward+self.gamma*possible_qtablefunction()
     # self.neural.set_weights()
       #  self.neural.fit()
-
-    #updates the fit of the nwtork based upon the new observation
-    def update_network(self, new_obs, reward, observation, terminated):
-        Goal = reward+self.gamma*k.ops.max(self.neural.predict(new_obs))
-        #self.neural.fit(np.identity(self.GD.observation_space.n)[new_obs:new_obs + 1], [Goal].reshape(-1, self.GD.action_space.n))
-        self.neural.fit(new_obs, [Goal].reshape(-1, self.GD.action_space.n))
         '''
     
         # Predicting the action alternates between random and prediction based on exploration rate
