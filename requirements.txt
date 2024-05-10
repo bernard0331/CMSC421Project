@@ -1,0 +1,10 @@
+numpy
+opencv-python
+keras
+tensorflow
+gymnasium
+pygetwindow
+mss
+pynput
+pyautogui
+tdqm
