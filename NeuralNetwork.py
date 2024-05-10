@@ -16,7 +16,7 @@ class NeuralNetwork:
         # the code needs to be updated 
     def __init__(self, alpha=0.98, max_experience=10000, batch_size = 4, num_of_runs=1000,
                 eps=0.5, eps_decay=0.999, gamma=0.98, lr=0.001, n=20, env=GDashEnv(),
-                target_epochs=50, eps_min = 0.1, rand_batch=False, double_q=False):
+                target_frames=500, eps_min = 0.1, rand_batch=False, double_q=False):
         self.GD = env
         self.action_space = self.GD.action_space
         self.num_actions = self.GD.action_space.n
@@ -46,7 +46,7 @@ class NeuralNetwork:
         self.eps_min = eps_min
         self.gamma = gamma
         self.lr = lr 
-        self.target_epochs = target_epochs
+        self.target_frames = target_frames
         self.n = n
         self.neural = self.build_model()
         if double_q:
@@ -193,6 +193,8 @@ class NeuralNetwork:
         time_start = time.time()
         i = 0
         while time.time() - time_start < 30:
+            if self.double_q and self.frame_count % self.target_frames == 0 and i > 0:
+                    self.update_target()
             log = open(log_file_path,"a")
             observation = self.GD.reset()
             observation = frame_processor.prepare_for_nn(observation)  # Use centralized preprocessing
@@ -267,20 +269,19 @@ class NeuralNetwork:
             log.close()
             i += 1
         self.frame_count = 0
-        self.neural = self.build_model()
-        self.neural_target = self.build_model()
         print("\nFPS: ",np.round((fps/30),0))
     
     # Trains Model
     def train_model(self, num_iterations, load=False, model_file_path=".venv\\Models\\",
                     model_name="Model.keras", target_name="Target.keras", log_file_path=None,
                     notes="Notes", explore_frames=5000):
+        self.neural = self.build_model()
+        if self.double_q:
+            self.neural_target = self.build_model()
         if load:
             self.neural = km.load_model(model_file_path+model_name)
             if self.double_q:
                 self.neural_target = km.load_model(model_file_path+target_name)
-        if self.double_q:
-            self.update_target()
         self.neural.save(model_file_path+model_name)
         if self.double_q:
             self.neural_target.save(model_file_path+target_name)
@@ -290,7 +291,7 @@ class NeuralNetwork:
         print("Iterations: ",num_iterations," Gamma: ",self.gamma," Epsilon: ",self.eps,
               "\nEpsilon Decay: ",self.exp_decay," Learning Rate: ",self.lr,
               " Batch Size: ",self.batch_size,"\n",file=log)
-        training_results = np.empty((num_iterations,5)) 
+        training_results = np.empty((num_iterations,6)) 
         absolute_max_progress = 0.0
         game = self.GD
         print("Living Factor: ",game.survival_reward," Death Penalty: ",game.death_penalty,
@@ -307,7 +308,10 @@ class NeuralNetwork:
             max_progress = 0.0
             reward = 0.0
             start_frame = self.frame_count
+            time_start = time.time()
             while not terminated:
+                if self.double_q and self.frame_count % self.target_frames == 0 and i > 0:
+                    self.update_target()
                 action = self.predict_action(observation)
                 new_obs, reward, terminated, progress = game.step(action)
                 
@@ -323,15 +327,13 @@ class NeuralNetwork:
                 
                 self.frame_count += 1
                 # game.render()
-                
+            
+            run_time = time.time() - time_start
             end_frame = self.frame_count
             
             # Decaying Epsilon
             if self.eps > self.eps_min and self.frame_count > explore_frames:
                 self.eps *= self.exp_decay
-                
-            if self.double_q and i % self.target_epochs == 0 and i > 0:
-                self.update_target()
             
             # Tracking Progress
             training_results[i,0] = max_progress
@@ -339,6 +341,7 @@ class NeuralNetwork:
             training_results[i,2] = game.cur_jumps
             training_results[i,3] = self.eps
             training_results[i,4] = end_frame - start_frame
+            training_results[i,5] = run_time
             
             if max_progress > absolute_max_progress:
                 absolute_max_progress = max_progress
@@ -358,18 +361,22 @@ class NeuralNetwork:
                 avg_jumps_per_prog = np.round(avg_jumps/avg_prog,0)
                 avg_epsilon = np.mean(training_results[(i-49):i,3])
                 avg_frames = np.mean(training_results[(i-49):i,4])
+                avg_run_time = np.mean(training_results[(i-49):i,5])
+                avg_fps = avg_frames / avg_run_time
                 
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames,"\n",file=log)
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps,"\n",file=log)
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames,"\n")
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps,"\n")
             
             # Saving Weights every 500 runs
-            if i % 500 == 0 and i > 0: 
+            if i % 50 == 0 and i > 0: 
                 self.neural.save(model_file_path+model_name)
                 if self.double_q:
                     self.neural_target.save(model_file_path+target_name)
@@ -392,15 +399,19 @@ class NeuralNetwork:
                 avg_jumps_per_prog = np.round(avg_jumps/avg_prog,0)
                 avg_epsilon = np.mean(training_results[(i-49):i,3])
                 avg_frames = np.mean(training_results[(i-49):i,4])
+                avg_run_time = np.mean(training_results[(i-49):i,5])
+                avg_fps = avg_frames / avg_run_time
                 
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames,file=log)
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps,file=log)
                 print("\nRun:",run_start,"-",run_end," Average Progress:",avg_prog,
-                      " Average Total Reward:",avg_reward," Average Total Jumps:",
+                      " Average Total Reward:",avg_reward,"\nAverage Total Jumps:",
                       avg_jumps," Average Jumps Per Progress %:",avg_jumps_per_prog," Average Epsilon:",
-                      avg_epsilon, " Average Number of Frames:",avg_frames)
+                      avg_epsilon,"\nAverage Number of Frames:",avg_frames," Average Run Time:",avg_run_time,
+                      "Average FPS:",avg_fps)
             
         print("\nAverage first 10 iterations: ", np.mean(training_results[:10,0]),"\n",
               "Average first 100 iterations: ", np.mean(training_results[:10,0]),"\n\n",

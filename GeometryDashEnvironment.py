@@ -3,11 +3,12 @@ from gymnasium import spaces
 import numpy as np
 from FrameHelper import FrameProcessor
 import EnvironmentHelper
-from EnvironmentHelper import is_dead, is_dead_progress
+from EnvironmentHelper import is_dead_progress, is_dead_progress_space, SpaceKeyHandler
 import pygetwindow as gw
 import cv2
 from pynput.keyboard import Key, Controller
 import time
+
 
 class GDashEnv(gym.Env):
     """A custom gymnasium environment designed for the game Geometry Dash. 
@@ -17,7 +18,7 @@ class GDashEnv(gym.Env):
     def __init__(self, top_offset=40, left_offset=80, width_offset=160,
                  height_offset=120, win_width=260, win_height=220, survival_reward=1, death_penalty=-100, down_scaling=False, 
                  scale_width_factor=1, scale_height_factor=1, scale_width_offset=60, 
-                 scale_height_offset=140, jump_penalty=0.1, goal_reward=10):
+                 scale_height_offset=140, jump_penalty=0.1, goal_reward=10, space=False):
         """Constructor for a GDashEnv object. Arguments determine the size of the screenshots
         of the game window and the reward values being used.
 
@@ -73,6 +74,8 @@ class GDashEnv(gym.Env):
         self.JUMP = 1
         self.IDLE = 0
         self.progress = 0.0
+        self.space = space
+        self.space_handler = SpaceKeyHandler()
     
     def _get_obs(self):
         """Basic getter for the current observation (current frame of the game)."""
@@ -90,6 +93,7 @@ class GDashEnv(gym.Env):
         # Makes sure Geometry Dash window is in focus.
         self.g_window.activate()
         # Presses space to start or restart level.
+        self.release_space()
         self.press_space()
         # Sleeps for 0.5 seconds to allow death screen to fully dissappear. 
         # Otherwise, environment thinks agent died multiple times in one iteration.
@@ -117,7 +121,12 @@ class GDashEnv(gym.Env):
             jump_pen = self.jump_penalty
         reward = 0.0
         raw_img = self.frame_processor.get_raw_frame()
-        terminated, progress = is_dead_progress(raw_img, self.progress)
+        
+        if self.space:
+            terminated, progress = is_dead_progress_space(raw_img, self.progress)
+        else:
+            terminated, progress = is_dead_progress(raw_img, self.progress)
+        
         if progress > 99:
             terminated = True
             reward = self.goal_reward
@@ -145,6 +154,12 @@ class GDashEnv(gym.Env):
                 terminated.
         """
         
+        if self.space:
+            if action == 1:
+                self.press_space_ship()
+                self.cur_jumps += 1
+            else:
+                self.release_space()
         if action == 1:     # Agent jumps.
             self.press_space()
             self.cur_jumps += 1
@@ -171,4 +186,9 @@ class GDashEnv(gym.Env):
         """
         self.keyboard.press(Key.space)
         self.keyboard.release(Key.space)
-
+        
+    def press_space_ship(self):
+        self.space_handler.press()
+    
+    def release_space(self):
+        self.space_handler.release()

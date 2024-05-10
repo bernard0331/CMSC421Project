@@ -89,7 +89,7 @@ class FrameProcessor:
             img = cv2.resize(img, (self.get_frame_shape()[1],self.get_frame_shape()[0]), interpolation=cv2.INTER_AREA)
         # Reducing noise, trying to get only the important lines and shapes (cube, platform, obstacles)
         # Higher thresholds seems to reduce noise (unecessary lines and shapes)
-        img = cv2.Canny(img, 150, 250)
+        #img = cv2.Canny(img, 150, 250)
         img = cv2.normalize(img, None, alpha=0, beta=1.0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         img = np.expand_dims(img, axis=-1)  # Add channel dimension for neural network compatibility
         # img = np.expand_dims(img, axis=0)
