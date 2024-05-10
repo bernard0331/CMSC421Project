@@ -45,17 +45,18 @@ class NeuralNetwork:
         #    return k.ops.max(self.neural(ten_obs,Training=False)[0])
 
     '''   
-    #predicitng the action alternates between random and prediction 
+    #predicitng the action alternates between random and prediction psuedocode
     def predict_action(self, observation):
         action_choice = [True, False]
         choice = random.choices(action_choice, weights = [self.exp, 1 - self.exp], k = 1)
         if (choice[0] == True):
             return random.choice([0,1])
         else:
-            #Also unsure of what I need tp use in predict some things in the keras documentation 
+            #Also unsure of what I need to use in predict some things in the keras documentation suggest weird 
+            #parameters for prediction
             return k.ops.max(self.neural.predict(observation))
 
-        
+    #Possible update network method psuedo code
     #def update_network(self, new_obs, reward, terminated):
     #    ten_obs = k.ops.convert_to_tensor(new_obs)
      #   x = k.ops.max(self.neural(ten_obs,Training=False)[0])
